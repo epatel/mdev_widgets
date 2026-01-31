@@ -146,6 +146,18 @@ mdev.Column(children: [
 
 `extractCallerId()` in `stack_id_mixin.dart` generates IDs like `[innerFunc] outerFunc > parent (file.dart:line:col)` by parsing the call stack. Platform-specific parsing for VM vs Web.
 
+**Instance counting:** When the same code line creates multiple widgets (loops, helper methods, `.map()`), they get indexed:
+```dart
+// All Paddings created at the same line in wrapItem()
+Widget wrapItem(Widget child) => mdev.Padding(...);  // line 5
+
+Column(children: [
+  wrapItem(Text('A')),  // ID: wrapItem (file.dart:5:32)
+  wrapItem(Text('B')),  // ID: wrapItem (file.dart:5:32) #2
+])
+```
+Use `resetInstanceCounts()` for testing.
+
 ### Hot Restart Handling (Flutter Web)
 
 Uses browser `sessionStorage` to detect stale providers. Each provider stores a unique session ID; server updates check `isCurrentSession` before processing.
@@ -175,7 +187,7 @@ Dashboard at http://localhost:8081 (WebSocket on same port).
 
 ## Widget Roadmap
 
-Current widgets: Text, Column, Row, Padding, Wrap, Stack, AppBar
+**Current widgets (7):** Text, Column, Row, Padding (individual edge control), Wrap, Stack, AppBar
 
 ```mermaid
 graph LR

@@ -68,7 +68,7 @@ mdev.Column(
 | `mdev.Text` | textStyle, fontSize, fontWeight, color | Text with style registry lookup |
 | `mdev.Column` | padding, spacing, backgroundColor, alignment | Vertical layout with auto-spacing |
 | `mdev.Row` | spacing, alignment | Horizontal layout with spacing |
-| `mdev.Padding` | padding | Simple padding wrapper |
+| `mdev.Padding` | paddingTop/Right/Bottom/Left, paddingAll | Individual edge control |
 | `mdev.Wrap` | direction, spacing, runSpacing | Flexible wrapping layout |
 | `mdev.Stack` | alignment, fit | Overlapping widget layout |
 | `mdev.AppBar` | title, actions, etc. | Full AppBar passthrough |
@@ -76,6 +76,26 @@ mdev.Column(
 **Common properties (all widgets):**
 - `visible` - Toggle visibility
 - `highlight` - Debug overlay (orange border)
+
+## Widget ID Generation
+
+Widgets auto-generate unique IDs from their call site (file:line:col). When the same code line creates multiple widgets (loops, helper methods, `.map()`), they get indexed:
+
+```dart
+// Helper method - all Paddings created at line 5
+Widget wrapItem(Widget child) => mdev.Padding(padding: EdgeInsets.all(8), child: child);  // line 5
+
+Column(children: [
+  wrapItem(Text('A')),  // ID: wrapItem (my_widget.dart:5:32)
+  wrapItem(Text('B')),  // ID: wrapItem (my_widget.dart:5:32) #2
+  wrapItem(Text('C')),  // ID: wrapItem (my_widget.dart:5:32) #3
+])
+
+// Or in a loop
+for (var item in items) {
+  children.add(mdev.Padding(...));  // Same line, each gets unique index
+}
+```
 
 ## Schema-Driven Configuration
 
@@ -143,7 +163,7 @@ The dashboard auto-generates UI controls based on widget schemas.
 │   │   ├── config_server.py   # WebSocket server (auto-reloads on changes)
 │   │   ├── dashboard.html     # Web dashboard UI
 │   │   └── tests/             # Python tests
-│   └── test/                  # Flutter tests (134 tests)
+│   └── test/                  # Flutter tests (136 tests)
 ├── mdev_widgets_demo/         # Full demo app with multiple tabs
 └── Makefile                   # Build commands (run `make` for menu)
 ```
