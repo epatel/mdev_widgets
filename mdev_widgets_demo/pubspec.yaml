@@ -1,0 +1,21 @@
+name: mdev_widgets_demo
+description: "Demo app showcasing all mdev_widgets."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.10.8
+
+dependencies:
+  flutter:
+    sdk: flutter
+  mdev_widgets:
+    path: ../mdev_widgets
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

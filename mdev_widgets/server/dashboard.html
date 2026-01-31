@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Widget Config Editor</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; color: #333; transition: background 0.3s, color 0.3s; }
+    body.dark { background: #1e1e1e; color: #e0e0e0; }
+
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    h1 { color: #333; margin: 0; }
+    body.dark h1 { color: #e0e0e0; }
+
+    .theme-toggle { display: flex; align-items: center; gap: 8px; }
+    .theme-toggle label { font-size: 13px; color: #666; }
+    body.dark .theme-toggle label { color: #aaa; }
+    .theme-switch { position: relative; width: 50px; height: 26px; }
+    .theme-switch input { opacity: 0; width: 0; height: 0; }
+    .theme-slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background: #ccc; border-radius: 26px; transition: 0.3s;
+    }
+    .theme-slider:before {
+      position: absolute; content: ""; height: 20px; width: 20px;
+      left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s;
+    }
+    .theme-switch input:checked + .theme-slider { background: #6200ee; }
+    .theme-switch input:checked + .theme-slider:before { transform: translateX(24px); }
+    .theme-icons { display: flex; gap: 4px; font-size: 16px; }
+
+    .status { padding: 8px 16px; border-radius: 4px; margin-bottom: 16px; display: inline-block; }
+    .status.connected { background: #c8e6c9; color: #2e7d32; }
+    .status.disconnected { background: #ffcdd2; color: #c62828; }
+
+    .styles-container { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .styles-section { flex: 1; min-width: 300px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
+    .styles-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; background: #6200ee; color: white; cursor: pointer;
+    }
+    .styles-header.colors { background: #e91e63; }
+    .styles-header.sizes { background: #00bcd4; }
+    .styles-header.textStyles { background: #9c27b0; }
+    .styles-header h2 { margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .styles-header .count { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; font-size: 11px; }
+    .styles-content { padding: 16px; }
+    .styles-content.collapsed { display: none; }
+    .color-swatches, .size-list, .text-style-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .color-swatch, .text-style-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 10px; background: #f5f5f5; border-radius: 6px;
+      font-size: 12px; border: 1px solid #e0e0e0;
+    }
+    .color-swatch .previews { display: flex; gap: 2px; }
+    .color-swatch .preview {
+      width: 20px; height: 20px; border-radius: 4px;
+      border: 1px solid rgba(0,0,0,0.2);
+    }
+    .color-swatch .preview.dark { border-radius: 0 4px 4px 0; }
+    .color-swatch .preview.light { border-radius: 4px 0 0 4px; }
+    .color-swatch .name, .text-style-item .name { font-weight: 500; }
+    .color-swatch .values { display: flex; flex-direction: column; gap: 1px; }
+    .color-swatch .value { color: #666; font-family: monospace; font-size: 10px; }
+    .color-swatch .value-label { color: #999; font-size: 9px; }
+    .text-style-item { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .text-style-item .preview-text { font-size: 14px; }
+    .text-style-item .props { font-size: 10px; color: #666; }
+
+    .type-section { margin-bottom: 24px; }
+    .type-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; background: #6200ee; color: white;
+      border-radius: 8px 8px 0 0; cursor: pointer;
+    }
+    .type-header h2 { margin: 0; font-size: 16px; flex: 1; }
+    .type-header .count { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+    .type-header.Text { background: #2196f3; }
+    .type-header.Column { background: #4caf50; }
+    .type-header.AppBar { background: #ff9800; }
+    .type-header.Padding { background: #9c27b0; }
+    .type-header.Row { background: #009688; }
+    .type-header.Wrap { background: #795548; }
+    .type-header.Stack { background: #607d8b; }
+
+    .type-content { background: white; border-radius: 0 0 8px 8px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .type-content.collapsed { display: none; }
+
+    .file-section { margin-bottom: 12px; }
+    .file-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; background: #e8e8e8; color: #333;
+      border-radius: 6px; cursor: pointer; font-size: 13px;
+    }
+    .file-header:hover { background: #ddd; }
+    .file-header .file-name { font-family: monospace; font-weight: 500; flex: 1; }
+    .file-header .count { background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 10px; font-size: 11px; }
+    .file-header .arrow { transition: transform 0.2s; }
+    .file-header.collapsed .arrow { transform: rotate(-90deg); }
+    .file-content { padding: 12px 0 0 12px; border-left: 2px solid #e0e0e0; margin-left: 8px; }
+    .file-content.collapsed { display: none; }
+
+    .widget-list { display: flex; flex-direction: column; gap: 12px; }
+    .widget-card { background: #fafafa; border-radius: 8px; padding: 12px; border: 1px solid #e0e0e0; }
+    .widget-card.modified { border-left: 4px solid #ff9800; }
+    .widget-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .widget-id { font-weight: 600; color: #333; font-size: 12px; word-break: break-all; font-family: monospace; }
+    .widget-badges { display: flex; gap: 8px; align-items: center; }
+
+    .form-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+    .form-group { flex: 1; min-width: 120px; }
+    .form-group label { display: block; font-size: 11px; color: #666; margin-bottom: 4px; text-transform: uppercase; }
+    .form-group input, .form-group select { width: 100%; padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+    .form-group input[type="checkbox"] { width: auto; }
+    .form-group input[type="color"] { height: 32px; padding: 2px; }
+    .form-group input[type="number"] { width: 80px; }
+
+    .color-select-group { display: flex; gap: 4px; align-items: center; }
+    .color-select-group select { flex: 1; }
+    .color-select-group input[type="color"] { width: 40px; flex-shrink: 0; }
+
+    .empty { color: #666; font-style: italic; }
+    .btn { border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+    .btn-reset { background: #ff9800; color: white; }
+    .btn-reset:hover { background: #f57c00; }
+    .btn-reset:disabled { background: #ccc; cursor: not-allowed; }
+
+    /* Dark theme overrides */
+    body.dark .styles-section { background: #2d2d2d; }
+    body.dark .styles-content { background: #2d2d2d; }
+    body.dark .type-content { background: #2d2d2d; }
+    body.dark .file-header { background: #3d3d3d; color: #e0e0e0; }
+    body.dark .file-header:hover { background: #4d4d4d; }
+    body.dark .file-content { border-left-color: #4d4d4d; }
+    body.dark .widget-card { background: #383838; border-color: #4d4d4d; }
+    body.dark .widget-id { color: #e0e0e0; }
+    body.dark .color-swatch, body.dark .text-style-item { background: #3d3d3d; border-color: #4d4d4d; }
+    body.dark .color-swatch .value, body.dark .text-style-item .props { color: #aaa; }
+    body.dark .color-swatch .value-label { color: #888; }
+    body.dark .form-group label { color: #aaa; }
+    body.dark .form-group input, body.dark .form-group select { background: #3d3d3d; border-color: #555; color: #e0e0e0; }
+    body.dark .empty { color: #888; }
+
+    /* Highlight active theme color */
+    .color-swatch .preview.active { box-shadow: 0 0 0 2px #6200ee; }
+    body.dark .color-swatch .preview.active { box-shadow: 0 0 0 2px #bb86fc; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Widget Config Editor</h1>
+    <div class="theme-toggle">
+      <div class="theme-icons"><span>☀️</span></div>
+      <label class="theme-switch">
+        <input type="checkbox" id="theme-checkbox" onchange="toggleTheme()">
+        <span class="theme-slider"></span>
+      </label>
+      <div class="theme-icons"><span>🌙</span></div>
+    </div>
+  </div>
+  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+    <div id="status" class="status disconnected">Disconnected</div>
+    <button class="btn btn-reset" onclick="resetAllChanges()" title="Reset all widgets to original values">Reset All</button>
+    <button class="btn" style="background: #c62828; color: white;" onclick="clearAll()" title="Remove all widgets">Clear All</button>
+  </div>
+
+  <div class="styles-container">
+    <div class="styles-section">
+      <div class="styles-header colors" onclick="toggleStyleSection('colors')">
+        <h2>Colors</h2>
+        <span id="colors-count" class="count">0</span>
+      </div>
+      <div id="colors-content" class="styles-content">
+        <div id="color-swatches" class="color-swatches">
+          <span class="empty">No colors registered...</span>
+        </div>
+      </div>
+    </div>
+    <div class="styles-section">
+      <div class="styles-header sizes" onclick="toggleStyleSection('sizes')">
+        <h2>Sizes</h2>
+        <span id="sizes-count" class="count">0</span>
+      </div>
+      <div id="sizes-content" class="styles-content">
+        <div id="size-list" class="size-list">
+          <span class="empty">No sizes registered...</span>
+        </div>
+      </div>
+    </div>
+    <div class="styles-section">
+      <div class="styles-header textStyles" onclick="toggleStyleSection('textStyles')">
+        <h2>Text Styles</h2>
+        <span id="textStyles-count" class="count">0</span>
+      </div>
+      <div id="textStyles-content" class="styles-content">
+        <div id="text-styles" class="text-style-list">
+          <span class="empty">No text styles registered...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="widgets"></div>
+
+  <script>
+    let ws;
+    let widgetData = {};
+    let widgetSchemas = {};  // Widget type -> schema from server
+    let registeredStyles = { colors: {}, sizes: {}, textStyles: {}, custom: {} };
+    let collapsedSections = {};
+    let isDarkTheme = localStorage.getItem('theme') === 'dark';
+
+    // Initialize theme on load
+    if (isDarkTheme) {
+      document.body.classList.add('dark');
+      document.getElementById('theme-checkbox').checked = true;
+    }
+
+    function toggleTheme() {
+      isDarkTheme = !isDarkTheme;
+      document.body.classList.toggle('dark', isDarkTheme);
+      localStorage.setItem('theme', isDarkTheme ? 'dark' : 'light');
+      renderStyles(registeredStyles); // Re-render to update active indicators
+    }
+
+    function connect() {
+      ws = new WebSocket('ws://localhost:8081');
+
+      ws.onopen = () => {
+        document.getElementById('status').textContent = 'Connected';
+        document.getElementById('status').className = 'status connected';
+        ws.send(JSON.stringify({ type: 'get_all' }));
+      };
+
+      ws.onclose = () => {
+        document.getElementById('status').textContent = 'Disconnected - Reconnecting...';
+        document.getElementById('status').className = 'status disconnected';
+        setTimeout(connect, 2000);
+      };
+
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'widgets') {
+          widgetData = msg.data;
+          // Extract schemas from widgets
+          Object.values(widgetData).forEach(w => {
+            if (w.schema && !widgetSchemas[w.type]) {
+              widgetSchemas[w.type] = w.schema;
+            }
+          });
+          renderWidgetsByType(widgetData);
+        } else if (msg.type === 'update') {
+          widgetData[msg.data.id] = msg.data;
+          // Extract schema if present
+          if (msg.data.schema && !widgetSchemas[msg.data.type]) {
+            widgetSchemas[msg.data.type] = msg.data.schema;
+          }
+          renderWidgetsByType(widgetData);
+        } else if (msg.type === 'styles') {
+          registeredStyles = msg.data;
+          renderStyles(registeredStyles);
+          renderWidgetsByType(widgetData);
+        } else if (msg.type === 'schemas') {
+          widgetSchemas = msg.data;
+          renderWidgetsByType(widgetData);
+        }
+      };
+    }
+
+    function renderStyles(styles) {
+      // Render colors
+      const colorContainer = document.getElementById('color-swatches');
+      const colorsContent = document.getElementById('colors-content');
+      const colors = styles.colors || {};
+      const colorNames = Object.keys(colors);
+
+      document.getElementById('colors-count').textContent = colorNames.length;
+      if (collapsedSections['style-colors']) {
+        colorsContent.classList.add('collapsed');
+      }
+
+      if (colorNames.length === 0) {
+        colorContainer.innerHTML = '<span class="empty">No colors registered...</span>';
+      } else {
+        colorContainer.innerHTML = colorNames.map(name => {
+          const color = colors[name];
+          const light = color.light || color;
+          const dark = color.dark || color;
+          const lightActive = !isDarkTheme ? 'active' : '';
+          const darkActive = isDarkTheme ? 'active' : '';
+          return `
+            <div class="color-swatch">
+              <div class="previews">
+                <div class="preview light ${lightActive}" style="background: ${light}" title="Light"></div>
+                <div class="preview dark ${darkActive}" style="background: ${dark}" title="Dark"></div>
+              </div>
+              <span class="name">${name}</span>
+              <div class="values">
+                <span class="value"><span class="value-label">L:</span> ${light}</span>
+                <span class="value"><span class="value-label">D:</span> ${dark}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render sizes
+      const sizeContainer = document.getElementById('size-list');
+      const sizesContent = document.getElementById('sizes-content');
+      const sizes = styles.sizes || {};
+      const sizeNames = Object.keys(sizes);
+
+      document.getElementById('sizes-count').textContent = sizeNames.length;
+      if (collapsedSections['style-sizes']) {
+        sizesContent.classList.add('collapsed');
+      }
+
+      if (sizeNames.length === 0) {
+        sizeContainer.innerHTML = '<span class="empty">No sizes registered...</span>';
+      } else {
+        sizeContainer.innerHTML = sizeNames.map(name => `
+          <div class="color-swatch">
+            <span class="name">${name}</span>
+            <span class="value">${sizes[name]}px</span>
+          </div>
+        `).join('');
+      }
+
+      // Render text styles
+      const textStyleContainer = document.getElementById('text-styles');
+      const textStylesContent = document.getElementById('textStyles-content');
+      const textStyles = styles.textStyles || {};
+      const styleNames = Object.keys(textStyles);
+
+      document.getElementById('textStyles-count').textContent = styleNames.length;
+      if (collapsedSections['style-textStyles']) {
+        textStylesContent.classList.add('collapsed');
+      }
+
+      if (styleNames.length === 0) {
+        textStyleContainer.innerHTML = '<span class="empty">No text styles registered...</span>';
+      } else {
+        textStyleContainer.innerHTML = styleNames.map(name => {
+          const ts = textStyles[name];
+          const previewStyle = buildPreviewStyle(ts);
+          const propsText = formatStyleProps(ts);
+          return `
+            <div class="text-style-item">
+              <span class="name">${name}</span>
+              <span class="preview-text" style="${previewStyle}">Sample Text</span>
+              <span class="props">${propsText}</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function buildPreviewStyle(ts) {
+      let style = '';
+      if (ts.fontSize) style += `font-size: ${ts.fontSize}px; `;
+      if (ts.fontWeight) style += `font-weight: ${ts.fontWeight === 'bold' ? 'bold' : ts.fontWeight}; `;
+      if (ts.fontStyle) style += `font-style: ${ts.fontStyle}; `;
+      if (ts.color) style += `color: ${ts.color}; `;
+      if (ts.letterSpacing) style += `letter-spacing: ${ts.letterSpacing}px; `;
+      return style;
+    }
+
+    function formatStyleProps(ts) {
+      const props = [];
+      if (ts.fontSize) props.push(`${ts.fontSize}px`);
+      if (ts.fontWeight) props.push(ts.fontWeight);
+      if (ts.fontStyle) props.push(ts.fontStyle);
+      if (ts.color) props.push(ts.color);
+      return props.join(' · ');
+    }
+
+    function extractFileFromId(id) {
+      // Match patterns like (package:app/main.dart:123:45) or (main.dart:123:45)
+      const match = id.match(/\((?:package:)?([^:)]+\.dart):\d+:\d+\)/);
+      return match ? match[1] : 'unknown';
+    }
+
+    function renderWidgetsByType(widgets) {
+      const container = document.getElementById('widgets');
+      const byType = {};
+
+      Object.values(widgets).forEach(w => {
+        const type = w.type || 'Unknown';
+        if (!byType[type]) byType[type] = {};
+
+        const file = extractFileFromId(w.id);
+        if (!byType[type][file]) byType[type][file] = [];
+        byType[type][file].push(w);
+      });
+
+      if (Object.keys(byType).length === 0) {
+        container.innerHTML = '<p class="empty">No widgets registered yet...</p>';
+        return;
+      }
+
+      const typeOrder = ['AppBar', 'Padding', 'Row', 'Column', 'Wrap', 'Stack', 'Text'];
+      const sortedTypes = Object.keys(byType).sort((a, b) => {
+        const ai = typeOrder.indexOf(a);
+        const bi = typeOrder.indexOf(b);
+        if (ai === -1 && bi === -1) return a.localeCompare(b);
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      });
+
+      container.innerHTML = sortedTypes.map(type => {
+        const isTypeCollapsed = collapsedSections['widget-' + type];
+        const files = byType[type];
+        const totalCount = Object.values(files).reduce((sum, arr) => sum + arr.length, 0);
+        const sortedFiles = Object.keys(files).sort();
+
+        return `
+          <div class="type-section">
+            <div class="type-header ${type}" onclick="toggleSection('${type}')">
+              <h2>${type}</h2>
+              <span class="count">${totalCount}</span>
+            </div>
+            <div class="type-content ${isTypeCollapsed ? 'collapsed' : ''}" id="content-${type}">
+              ${sortedFiles.map(file => {
+                const fileKey = type + '-' + file;
+                const isFileCollapsed = collapsedSections['file-' + fileKey];
+                const fileWidgets = files[file];
+                return `
+                  <div class="file-section">
+                    <div class="file-header ${isFileCollapsed ? 'collapsed' : ''}" onclick="toggleFileSection('${escapeJs(fileKey)}')">
+                      <span class="arrow">▼</span>
+                      <span class="file-name">${escapeHtml(file)}</span>
+                      <span class="count">${fileWidgets.length}</span>
+                    </div>
+                    <div class="file-content ${isFileCollapsed ? 'collapsed' : ''}" id="file-content-${CSS.escape(fileKey)}">
+                      <div class="widget-list">
+                        ${fileWidgets.map(w => createWidgetCard(w)).join('')}
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleSection(type) {
+      const key = 'widget-' + type;
+      collapsedSections[key] = !collapsedSections[key];
+      const content = document.getElementById('content-' + type);
+      content.classList.toggle('collapsed', collapsedSections[key]);
+    }
+
+    function toggleFileSection(fileKey) {
+      const key = 'file-' + fileKey;
+      collapsedSections[key] = !collapsedSections[key];
+      const header = event.currentTarget;
+      const content = document.getElementById('file-content-' + CSS.escape(fileKey));
+      header.classList.toggle('collapsed', collapsedSections[key]);
+      content.classList.toggle('collapsed', collapsedSections[key]);
+    }
+
+    function toggleStyleSection(section) {
+      const key = 'style-' + section;
+      collapsedSections[key] = !collapsedSections[key];
+      const content = document.getElementById(section + '-content');
+      content.classList.toggle('collapsed', collapsedSections[key]);
+    }
+
+    function createWidgetCard(w) {
+      const modified = w.modified || false;
+      const props = w.properties || {};
+
+      return `
+        <div class="widget-card ${modified ? 'modified' : ''}" id="card-${CSS.escape(w.id)}">
+          <div class="widget-header">
+            <span class="widget-id">${escapeHtml(w.id)}</span>
+            <button class="btn btn-reset" onclick="sendReset('${escapeJs(w.id)}')" ${modified ? '' : 'disabled'}>Reset</button>
+          </div>
+          ${createPropertiesForm(w.id, w.type, props, w.schema)}
+        </div>
+      `;
+    }
+
+    function createPropertiesForm(id, type, props, schema) {
+      // Use schema from widget or global schemas
+      const widgetSchema = schema || widgetSchemas[type];
+
+      if (!widgetSchema || widgetSchema.length === 0) {
+        // Fallback for legacy widgets without schema
+        return '<span class="empty">No schema available</span>';
+      }
+
+      const rows = [];
+      let currentRow = [];
+
+      widgetSchema.forEach((field, i) => {
+        currentRow.push(createFieldFromSchema(id, field, props[field.key], props));
+        if (currentRow.length === 3 || i === widgetSchema.length - 1) {
+          rows.push(`<div class="form-row">${currentRow.join('')}</div>`);
+          currentRow = [];
+        }
+      });
+
+      return rows.join('');
+    }
+
+    function createFieldFromSchema(id, field, value, props) {
+      const escapedId = escapeJs(id);
+      const key = field.key;
+      const label = field.label || key;
+      const type = field.type;
+
+      switch (type) {
+        case 'bool':
+          return `
+            <div class="form-group">
+              <label><input type="checkbox" ${value ? 'checked' : ''}
+                onchange="sendPropUpdate('${escapedId}', '${key}', this.checked)"> ${label}</label>
+            </div>
+          `;
+
+        case 'number':
+          return `
+            <div class="form-group">
+              <label>${label}</label>
+              <input type="number" value="${value ?? ''}"
+                ${field.min !== undefined ? `min="${field.min}"` : ''}
+                ${field.max !== undefined ? `max="${field.max}"` : ''}
+                ${field.step !== undefined ? `step="${field.step}"` : ''}
+                onchange="sendPropUpdate('${escapedId}', '${key}', this.value ? parseFloat(this.value) : null)">
+            </div>
+          `;
+
+        case 'string':
+          return `
+            <div class="form-group">
+              <label>${label}</label>
+              <input type="text" value="${escapeHtml(value || '')}"
+                ${field.placeholder ? `placeholder="${escapeHtml(field.placeholder)}"` : ''}
+                onchange="sendPropUpdate('${escapedId}', '${key}', this.value)">
+            </div>
+          `;
+
+        case 'textOverride':
+          const defaultText = props.defaultText || '';
+          return `
+            <div class="form-group">
+              <label>${label} ${defaultText ? `(default: "${escapeHtml(defaultText)}")` : ''}</label>
+              <input type="text" value="${escapeHtml(value || '')}"
+                placeholder="${escapeHtml(defaultText)}"
+                onchange="sendPropUpdate('${escapedId}', '${key}', this.value)">
+            </div>
+          `;
+
+        case 'enum':
+          const options = (field.options || []).map(o =>
+            `<option value="${o}" ${value === o ? 'selected' : ''}>${o}</option>`
+          ).join('');
+          return `
+            <div class="form-group">
+              <label>${label}</label>
+              <select onchange="sendPropUpdate('${escapedId}', '${key}', this.value || null)">
+                <option value="" ${!value ? 'selected' : ''}>(default)</option>
+                ${options}
+              </select>
+            </div>
+          `;
+
+        case 'color':
+          return createColorField(id, field, value);
+
+        case 'textStyle':
+          return createTextStyleField(id, field, value);
+
+        case 'size':
+          return createSizeField(id, field, value);
+
+        default:
+          return `
+            <div class="form-group">
+              <label>${label}</label>
+              <input type="text" value="${escapeHtml(value ?? '')}"
+                onchange="sendPropUpdate('${escapedId}', '${key}', this.value)">
+            </div>
+          `;
+      }
+    }
+
+    function createColorField(id, field, value) {
+      const escapedId = escapeJs(id);
+      const key = field.key;
+      const label = field.label || key;
+      const colors = registeredStyles.colors || {};
+      const colorNames = Object.keys(colors);
+      const colorVal = value || '#000000';
+      const displayColor = colorVal.length > 7 ? '#' + colorVal.slice(-6) : colorVal;
+
+      let selectedName = 'custom';
+      for (const name of colorNames) {
+        const color = colors[name];
+        const colorLight = (color.light || color).toLowerCase();
+        const colorDark = (color.dark || color).toLowerCase();
+        if (colorLight === displayColor.toLowerCase() || colorDark === displayColor.toLowerCase()) {
+          selectedName = name;
+          break;
+        }
+      }
+
+      const options = colorNames.map(name =>
+        `<option value="${name}" ${selectedName === name ? 'selected' : ''}>${name}</option>`
+      ).join('');
+
+      return `
+        <div class="form-group">
+          <label>${label}</label>
+          <div class="color-select-group">
+            <select onchange="onColorSelect('${escapedId}', '${key}', this.value)">
+              <option value="" ${!value ? 'selected' : ''}>(none)</option>
+              <option value="custom" ${selectedName === 'custom' && value ? 'selected' : ''}>Custom...</option>
+              ${options}
+            </select>
+            <input type="color" id="color-${CSS.escape(id)}-${key}" value="${displayColor}"
+              onchange="sendPropUpdate('${escapedId}', '${key}', this.value)">
+          </div>
+        </div>
+      `;
+    }
+
+    function createTextStyleField(id, field, value) {
+      const escapedId = escapeJs(id);
+      const key = field.key;
+      const label = field.label || key;
+      const textStyles = registeredStyles.textStyles || {};
+      const styleNames = Object.keys(textStyles);
+
+      const options = styleNames.map(name =>
+        `<option value="${name}" ${value === name ? 'selected' : ''}>${name}</option>`
+      ).join('');
+
+      return `
+        <div class="form-group">
+          <label>${label}</label>
+          <select onchange="sendPropUpdate('${escapedId}', '${key}', this.value)">
+            <option value="" ${!value ? 'selected' : ''}>Custom...</option>
+            ${options}
+          </select>
+        </div>
+      `;
+    }
+
+    function createSizeField(id, field, value) {
+      const escapedId = escapeJs(id);
+      const key = field.key;
+      const label = field.label || key;
+      const sizes = registeredStyles.sizes || {};
+      const prefix = field.prefix || '';
+
+      // Filter sizes by prefix if specified
+      const filteredSizes = prefix
+        ? Object.keys(sizes).filter(name => name.startsWith(prefix))
+        : Object.keys(sizes);
+
+      // Check if current value is a registered size name
+      const isRegisteredSize = typeof value === 'string' && sizes[value] !== undefined;
+
+      const options = filteredSizes.map(name =>
+        `<option value="${name}" ${value === name ? 'selected' : ''}>${name} (${sizes[name]}px)</option>`
+      ).join('');
+
+      return `
+        <div class="form-group">
+          <label>${label}</label>
+          <select onchange="sendPropUpdate('${escapedId}', '${key}', this.value || null)">
+            <option value="" ${!value ? 'selected' : ''}>(none)</option>
+            ${options}
+            <option value="custom" ${value && !isRegisteredSize && value !== '' ? 'selected' : ''}>Custom...</option>
+          </select>
+        </div>
+      `;
+    }
+
+    function onColorSelect(id, key, colorName) {
+      if (colorName === 'custom' || colorName === '') {
+        if (colorName === '') {
+          sendPropUpdate(id, key, null);
+        }
+        return;
+      }
+      const colors = registeredStyles.colors || {};
+      if (colors[colorName]) {
+        const color = colors[colorName];
+        // Send the color value for current theme
+        const colorValue = isDarkTheme ? (color.dark || color) : (color.light || color);
+        sendPropUpdate(id, key, colorValue);
+      }
+    }
+
+    function sendPropUpdate(id, key, value) {
+      ws.send(JSON.stringify({ type: 'update_prop', id, key, value }));
+    }
+
+    function sendReset(id) {
+      ws.send(JSON.stringify({ type: 'reset', id }));
+    }
+
+    function resetAllChanges() {
+      if (confirm('Reset all widgets to their original values?')) {
+        ws.send(JSON.stringify({ type: 'reset_all_changes' }));
+      }
+    }
+
+    function clearAll() {
+      if (confirm('Clear all widgets? This will remove all widgets from the list.')) {
+        ws.send(JSON.stringify({ type: 'reset_all' }));
+        widgetData = {};
+        widgetSchemas = {};
+        renderWidgetsByType(widgetData);
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function escapeJs(str) {
+      return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    connect();
+  </script>
+</body>
+</html>
