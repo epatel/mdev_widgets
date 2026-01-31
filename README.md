@@ -34,16 +34,16 @@ make analyze
 ## Usage
 
 ```dart
-import 'package:mdev_widgets/mdev_widgets.dart' as mdev;
+import 'package:mdev_widgets/mdev.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final setup = await mdev.MdevSetup.init();
+  final setup = await MdevSetup.init();
 
   // Register styles (colors support light/dark themes)
   setup.provider.registerColor('primary', light: '#6200ee', dark: '#bb86fc');
   setup.provider.registerSize('spacing-md', 16.0);
-  setup.provider.registerTextStyle('heading', mdev.TextStyleConfig(
+  setup.provider.registerTextStyle('heading', TextStyleConfig(
     fontSize: 24.0,
     fontWeight: 'bold',
   ));
@@ -52,11 +52,11 @@ void main() async {
   setup.connect();
 }
 
-// Use widgets with mdev prefix
-mdev.Column(
+// mdev widgets replace Flutter's - no prefix needed
+Column(
   children: [
-    mdev.Text('Hello World'),
-    mdev.Padding(padding: EdgeInsets.all(16), child: ...),
+    Text('Hello World'),
+    Padding(padding: EdgeInsets.all(16), child: ...),
   ],
 )
 ```
@@ -65,13 +65,18 @@ mdev.Column(
 
 | Widget | Key Properties | Description |
 |--------|----------------|-------------|
-| `mdev.Text` | textStyle, fontSize, fontWeight, color | Text with style registry lookup |
-| `mdev.Column` | padding, spacing, backgroundColor, alignment | Vertical layout with auto-spacing |
-| `mdev.Row` | spacing, alignment | Horizontal layout with spacing |
-| `mdev.Padding` | paddingTop/Right/Bottom/Left, paddingAll | Individual edge control |
-| `mdev.Wrap` | direction, spacing, runSpacing | Flexible wrapping layout |
-| `mdev.Stack` | alignment, fit | Overlapping widget layout |
-| `mdev.AppBar` | title, actions, etc. | Full AppBar passthrough |
+| `Text` | textStyle, fontSize, fontWeight, color | Text with style registry lookup |
+| `Column` | padding, spacing, backgroundColor, alignment | Vertical layout with auto-spacing |
+| `Row` | spacing, alignment | Horizontal layout with spacing |
+| `Padding` | paddingTop/Right/Bottom/Left, paddingAll | Individual edge control |
+| `Container` | padding, margin, color, width, height, alignment | Most versatile layout widget |
+| `SizedBox` | width, height | Simple sizing/spacing |
+| `Center` | widthFactor, heightFactor | Centering wrapper |
+| `Expanded` | flex | Fills available space in flex layouts |
+| `Flexible` | flex, fit | Flexible child in flex layouts |
+| `Wrap` | direction, spacing, runSpacing | Flexible wrapping layout |
+| `Stack` | alignment, fit | Overlapping widget layout |
+| `AppBar` | title, actions, etc. | Full AppBar passthrough |
 
 **Common properties (all widgets):**
 - `visible` - Toggle visibility
@@ -83,7 +88,7 @@ Widgets auto-generate unique IDs from their call site (file:line:col). When the 
 
 ```dart
 // Helper method - all Paddings created at line 5
-Widget wrapItem(Widget child) => mdev.Padding(padding: EdgeInsets.all(8), child: child);  // line 5
+Widget wrapItem(Widget child) => Padding(padding: EdgeInsets.all(8), child: child);  // line 5
 
 Column(children: [
   wrapItem(Text('A')),  // ID: wrapItem (my_widget.dart:5:32)
@@ -93,7 +98,7 @@ Column(children: [
 
 // Or in a loop
 for (var item in items) {
-  children.add(mdev.Padding(...));  // Same line, each gets unique index
+  children.add(Padding(...));  // Same line, each gets unique index
 }
 ```
 
@@ -154,7 +159,7 @@ The dashboard auto-generates UI controls based on widget schemas.
 ```
 ├── mdev_widgets/              # Flutter package
 │   ├── lib/src/
-│   │   ├── widgets/           # Text, Column, Row, Padding, Wrap, Stack, AppBar
+│   │   ├── widgets/           # 12 configurable widgets
 │   │   ├── schema/            # PropDescriptor types, ConfigurableWidgetMixin
 │   │   ├── providers/         # WidgetConfigProvider, StyleRegistry
 │   │   ├── services/          # ConfigSocket, ConfigPersistence, SessionStorage
@@ -171,12 +176,12 @@ The dashboard auto-generates UI controls based on widget schemas.
 ## Architecture
 
 ```
-┌─────────────────┐     WebSocket      ┌─────────────────┐
+┌─────────────────┐       WebSocket      ┌─────────────────┐
 │  Flutter App    │ ◄──────────────────► │  Python Server  │
 │                 │                      │                 │
 │  ┌───────────┐  │                      │  ┌───────────┐  │
-│  │ mdev.Text │──┼── register ─────────►│  │  widgets  │  │
-│  │ mdev.Col  │  │                      │  │  schemas  │  │
+│  │   Text    │──┼── register ─────────►│  │  widgets  │  │
+│  │  Column   │  │                      │  │  schemas  │  │
 │  └───────────┘  │                      │  │  styles   │  │
 │       │         │                      │  └───────────┘  │
 │       ▼         │                      │       │         │
