@@ -43,7 +43,7 @@ void main() async {
   // Register styles (colors support light/dark themes)
   setup.provider.registerColor('primary', light: '#6200ee', dark: '#bb86fc');
   setup.provider.registerSize('spacing-md', 16.0);
-  setup.provider.registerTextStyle('heading', TextStyleConfig(
+  setup.provider.registerTextStyle('heading', const TextStyleConfig(
     fontSize: 24.0,
     fontWeight: 'bold',
   ));

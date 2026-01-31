@@ -2,7 +2,7 @@
 ///
 /// Usage:
 /// ```dart
-/// import 'package:mdev_widgets_demo/mdev.dart';
+/// import 'package:mdev_widgets/mdev.dart';
 ///
 /// // Now use mdev widgets directly:
 /// Text('hello')      // mdev.Text
