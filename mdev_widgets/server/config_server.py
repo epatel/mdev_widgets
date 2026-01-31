@@ -205,8 +205,9 @@ async def main():
     stop = loop.create_future()
 
     def handle_signal():
-        print("\nShutting down...")
-        stop.set_result(None)
+        if not stop.done():
+            print("\nShutting down...")
+            stop.set_result(None)
 
     for sig in (signal.SIGINT, signal.SIGTERM):
         try:
@@ -230,13 +231,29 @@ def run_with_reload():
     watch_files = [script_path, dashboard_path]
     last_mtimes = {f: f.stat().st_mtime for f in watch_files if f.exists()}
 
-    while True:
+    process = None
+    shutdown_requested = False
+
+    def handle_shutdown(signum, frame):
+        nonlocal shutdown_requested
+        if shutdown_requested:
+            return  # Already handling shutdown
+        shutdown_requested = True
+        if process and process.poll() is None:
+            process.terminate()
+            process.wait()
+
+    # Handle both SIGINT (Ctrl+C) and SIGTERM (kill command)
+    signal.signal(signal.SIGINT, handle_shutdown)
+    signal.signal(signal.SIGTERM, handle_shutdown)
+
+    while not shutdown_requested:
         print("Starting server (auto-reload enabled)...")
         print(f"  Watching: {', '.join(f.name for f in watch_files)}")
         process = subprocess.Popen([sys.executable, str(script_path), '--no-reload'])
 
         try:
-            while process.poll() is None:
+            while process.poll() is None and not shutdown_requested:
                 for path in watch_files:
                     if path.exists():
                         current_mtime = path.stat().st_mtime
@@ -251,10 +268,13 @@ def run_with_reload():
                     continue
                 break  # File changed, restart
             else:
+                if shutdown_requested:
+                    break
                 break  # Process ended normally
-        except KeyboardInterrupt:
-            process.terminate()
-            process.wait()
+        except Exception:
+            if process and process.poll() is None:
+                process.terminate()
+                process.wait()
             break
 
     print("Server stopped.")

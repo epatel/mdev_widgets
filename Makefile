@@ -63,7 +63,7 @@ server: venv-check
 server-bg: venv-check
 	echo "Starting config server in background..."
 	cd mdev_widgets/server && ../../$(VENV_PYTHON) config_server.py &
-	sleep 1
+	sleep 2
 
 # Run the Flutter counter app
 app:
@@ -73,8 +73,12 @@ app:
 demo:
 	cd mdev_widgets_demo && flutter run -d chrome
 
-# Run both server and app
-all: server-bg app
+# Run both server and app (cleanup server when app exits)
+all: server-bg
+	cd mdev_widgets_counter && flutter run -d chrome; \
+	echo "Stopping server..."; \
+	pkill -f "config_server.py" 2>/dev/null || true; \
+	echo "Done."
 
 # Analyze code
 analyze:
@@ -119,7 +123,7 @@ pub-get:
 
 # Stop any running server
 stop-server:
-	pkill -f "config_server.py" 2>/dev/null || echo "No server running"
+	pkill -f "config_server.py" 2>/dev/null && echo "Server stopped" || echo "No server running"
 
 # Open the config dashboard
 dashboard:
