@@ -1,12 +1,23 @@
+import 'package:flutter/scheduler.dart';
+
 /// Tracks instance counts for each base ID to differentiate widgets at the same code location.
 final Map<String, int> _instanceCounts = {};
 
-/// Reset instance counts (useful for testing or hot restart).
+/// Tracks the frame when counts were last used, to auto-reset on new frames.
+int _lastFrameId = -1;
+int _currentFrameId = 0;
+bool _frameCallbackScheduled = false;
+
+/// Reset instance counts (useful for testing).
 void resetInstanceCounts() {
   _instanceCounts.clear();
+  _lastFrameId = -1;
 }
 
 String extractCallerId() {
+  // Auto-reset counts at the start of each new frame
+  _ensureFrameReset();
+
   final baseId = _extractBaseCallerId();
 
   // Increment instance count for this base ID
@@ -18,6 +29,29 @@ String extractCallerId() {
     return baseId;
   }
   return '$baseId #${count + 1}';
+}
+
+void _ensureFrameReset() {
+  // If we're in a new frame, reset counts
+  if (_lastFrameId != _currentFrameId) {
+    _instanceCounts.clear();
+    _lastFrameId = _currentFrameId;
+  }
+
+  // Schedule a callback to increment frame ID after this frame
+  // Only if binding is initialized (not in tests before runApp)
+  if (!_frameCallbackScheduled) {
+    try {
+      final binding = SchedulerBinding.instance;
+      _frameCallbackScheduled = true;
+      binding.addPostFrameCallback((_) {
+        _currentFrameId++;
+        _frameCallbackScheduled = false;
+      });
+    } catch (_) {
+      // Binding not initialized yet - no frame tracking needed
+    }
+  }
 }
 
 String _extractBaseCallerId() {
@@ -105,5 +139,10 @@ bool _shouldSkipLine(String line) {
       line.contains('padding.dart') ||
       line.contains('wrap.dart') ||
       line.contains('stack.dart') ||
-      line.contains('app_bar.dart');
+      line.contains('app_bar.dart') ||
+      line.contains('container.dart') ||
+      line.contains('sized_box.dart') ||
+      line.contains('center.dart') ||
+      line.contains('expanded.dart') ||
+      line.contains('flexible.dart');
 }

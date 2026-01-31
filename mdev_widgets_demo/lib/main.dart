@@ -3,9 +3,13 @@ import 'package:mdev_widgets/mdev_widgets.dart' as mdev;
 
 import 'init_mdev.dart';
 import 'demos/appbar_demo.dart';
+import 'demos/center_demo.dart';
 import 'demos/column_demo.dart';
+import 'demos/container_demo.dart';
+import 'demos/flex_demo.dart';
 import 'demos/padding_demo.dart';
 import 'demos/row_demo.dart';
+import 'demos/sized_box_demo.dart';
 import 'demos/stack_demo.dart';
 import 'demos/text_demo.dart';
 import 'demos/wrap_demo.dart';
@@ -78,7 +82,7 @@ class DemoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: mdev.AppBar(
           title: const Text('Mdev Widgets Demo'),
@@ -96,6 +100,7 @@ class DemoPage extends StatelessWidget {
             unselectedLabelColor: Colors.white70,
             indicatorColor: Colors.white,
             tabs: [
+              Tab(text: 'Essentials'),
               Tab(text: 'Padding'),
               Tab(text: 'Layout'),
               Tab(text: 'Text & AppBar'),
@@ -105,12 +110,36 @@ class DemoPage extends StatelessWidget {
         ),
         body: const TabBarView(
           children: [
+            _EssentialsTab(),
             PaddingDemo(),
             _LayoutTab(),
             _TextAppBarTab(),
             _InstructionsTab(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _EssentialsTab extends StatelessWidget {
+  const _EssentialsTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: mdev.Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          ContainerDemo(),
+          SizedBox(height: 24),
+          SizedBoxDemo(),
+          SizedBox(height: 24),
+          CenterDemo(),
+          SizedBox(height: 24),
+          FlexDemo(),
+        ],
       ),
     );
   }

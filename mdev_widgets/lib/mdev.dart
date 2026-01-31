@@ -19,7 +19,7 @@ library;
 
 // Export Flutter material, hiding widgets that mdev overrides
 export 'package:flutter/material.dart'
-    hide Text, Column, Row, Padding, Wrap, Stack, AppBar;
+    hide Text, Column, Row, Padding, Wrap, Stack, AppBar, Container, SizedBox, Center, Expanded, Flexible;
 
 // Export mdev widgets (they become available without prefix)
 export 'package:mdev_widgets/mdev_widgets.dart'
@@ -31,6 +31,11 @@ export 'package:mdev_widgets/mdev_widgets.dart'
         Wrap,
         Stack,
         AppBar,
+        Container,
+        SizedBox,
+        Center,
+        Expanded,
+        Flexible,
         // Also export setup-related classes
         MdevSetup,
         WidgetConfigProvider,

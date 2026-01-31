@@ -5,9 +5,14 @@ export 'src/mdev_setup.dart';
 
 // Widgets
 export 'src/widgets/app_bar.dart';
+export 'src/widgets/center.dart';
 export 'src/widgets/column.dart';
+export 'src/widgets/container.dart';
+export 'src/widgets/expanded.dart';
+export 'src/widgets/flexible.dart';
 export 'src/widgets/padding.dart';
 export 'src/widgets/row.dart';
+export 'src/widgets/sized_box.dart';
 export 'src/widgets/stack.dart';
 export 'src/widgets/stack_id_mixin.dart';
 export 'src/widgets/text.dart';
