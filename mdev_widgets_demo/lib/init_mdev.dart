@@ -1,13 +1,21 @@
 import 'package:mdev_widgets/mdev_widgets.dart' as mdev;
 
+import 'widgets/info_card.dart';
+
 Future<mdev.MdevSetup> initMdev() async {
   final setup = await mdev.MdevSetup.init();
 
   _registerColors(setup.provider);
   _registerSizes(setup.provider);
   _registerTextStyles(setup.provider);
+  _registerCustomWidgets(setup.provider);
 
   return setup;
+}
+
+void _registerCustomWidgets(mdev.WidgetConfigProvider provider) {
+  // Register custom widget configs
+  InfoCardConfig.register(provider);
 }
 
 void _registerColors(mdev.WidgetConfigProvider provider) {

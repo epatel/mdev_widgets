@@ -1,10 +1,16 @@
-import 'package:flutter/widgets.dart' as flutter;
-import 'package:mdev_widgets/mdev.dart';
+import 'package:flutter/material.dart';
 
-/// Demo showing how to build custom widgets with configurable internals.
+import '../widgets/info_card.dart';
+
+/// Demo showing how to create custom widgets with shared configuration.
 ///
-/// The InfoCard widget uses mdev widgets for its internal layout,
-/// making padding, spacing, and text styles configurable via the dashboard.
+/// All InfoCard instances share the same config (InfoCard.config).
+/// Open the dashboard and look for the "InfoCard" section to configure:
+/// - Padding and spacing
+/// - Font sizes
+/// - Colors
+///
+/// Changes affect ALL InfoCards on this page simultaneously.
 class CustomWidgetDemo extends StatelessWidget {
   const CustomWidgetDemo({super.key});
 
@@ -13,19 +19,19 @@ class CustomWidgetDemo extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Custom Widget Example',
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        const Text(
+          'Custom Widget Config',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
-          'Build your own widgets using mdev components for live configuration',
+          'All InfoCards share one config - changes affect all instances',
           style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
 
-        // Example cards using the custom InfoCard widget
-        Wrap(
+        // Multiple InfoCards - all use the same shared config
+        const Wrap(
           spacing: 16,
           runSpacing: 16,
           children: [
@@ -53,12 +59,12 @@ class CustomWidgetDemo extends StatelessWidget {
           ],
         ),
 
-        SizedBox(height: 32),
-        Text(
+        const SizedBox(height: 32),
+        const Text(
           'How It Works',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -68,34 +74,37 @@ class CustomWidgetDemo extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '1. Use mdev widgets inside your custom widget',
-                style: const TextStyle(fontWeight: FontWeight.w500),
-              ),
-              SizedBox(height: 4),
-              Text(
-                'Replace Flutter\'s Column, Padding, Text with mdev versions',
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
-              ),
-              SizedBox(height: 12),
-              Text(
-                '2. Each mdev widget auto-registers by code location',
-                style: const TextStyle(fontWeight: FontWeight.w500),
-              ),
-              SizedBox(height: 4),
-              Text(
-                'Unique IDs are generated from file:line:column',
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
-              ),
-              SizedBox(height: 12),
-              Text(
-                '3. Open the dashboard to configure',
-                style: const TextStyle(fontWeight: FontWeight.w500),
-              ),
-              SizedBox(height: 4),
-              Text(
-                'Change padding, spacing, colors, font sizes live',
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+              _step('1', 'Define InfoCardConfig with props (schema)'),
+              const SizedBox(height: 8),
+              _step('2', 'Register once at app startup'),
+              const SizedBox(height: 8),
+              _step('3', 'InfoCard reads from shared config'),
+              const SizedBox(height: 8),
+              _step('4', 'Dashboard shows "InfoCard" section'),
+              const SizedBox(height: 8),
+              _step('5', 'All InfoCards update together'),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 24),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.blue.shade200),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.lightbulb, color: Colors.blue.shade700),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Open the dashboard (make dashboard) and look for "InfoCard" under widget types. '
+                  'Try changing innerPadding or titleFontSize!',
+                  style: TextStyle(color: Colors.blue.shade900),
+                ),
               ),
             ],
           ),
@@ -103,104 +112,25 @@ class CustomWidgetDemo extends StatelessWidget {
       ],
     );
   }
-}
 
-/// A custom card widget with configurable internals using mdev widgets.
-///
-/// The internal padding, spacing, and text styles can be adjusted via
-/// the mdev dashboard without code changes.
-class InfoCard extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String subtitle;
-  final String description;
-
-  const InfoCard({
-    super.key,
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.subtitle,
-    required this.description,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return flutter.SizedBox(
-      width: 280,
-      child: flutter.DecoratedBox(
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        // Outer padding - configurable via dashboard
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          // Main content column - spacing is configurable
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Icon row
-              Row(
-                children: [
-                  flutter.Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: iconColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(icon, color: iconColor, size: 24),
-                  ),
-                  SizedBox(width: 12),
-                  // Title column - inner spacing configurable
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title text - font size configurable
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        // Subtitle text - color/size configurable
-                        Text(
-                          subtitle,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              // Spacing between header and description - configurable
-              SizedBox(height: 12),
-              // Description text - all text properties configurable
-              Text(
-                description,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade700,
-                  height: 1.4,
-                ),
-              ),
-            ],
+  Widget _step(String num, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: Colors.deepPurple,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(num, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
           ),
         ),
-      ),
+        const SizedBox(width: 12),
+        Expanded(child: Text(text)),
+      ],
     );
   }
 }
