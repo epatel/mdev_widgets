@@ -83,6 +83,7 @@
     .type-header.Row { background: #009688; }
     .type-header.Wrap { background: #795548; }
     .type-header.Stack { background: #607d8b; }
+    .type-header.InfoCard { background: #e91e63; }
 
     .type-content { background: white; border-radius: 0 0 8px 8px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .type-content.collapsed { display: none; }
@@ -119,6 +120,10 @@
     .color-select-group { display: flex; gap: 4px; align-items: center; }
     .color-select-group select { flex: 1; }
     .color-select-group input[type="color"] { width: 40px; flex-shrink: 0; }
+
+    .number-with-preset { display: flex; gap: 4px; align-items: center; }
+    .number-with-preset select { flex: 1; min-width: 100px; }
+    .number-with-preset input[type="number"] { width: 70px; flex-shrink: 0; }
 
     .empty { color: #666; font-style: italic; }
     .btn { border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
@@ -526,16 +531,7 @@
           `;
 
         case 'number':
-          return `
-            <div class="form-group">
-              <label>${label}</label>
-              <input type="number" value="${value ?? ''}"
-                ${field.min !== undefined ? `min="${field.min}"` : ''}
-                ${field.max !== undefined ? `max="${field.max}"` : ''}
-                ${field.step !== undefined ? `step="${field.step}"` : ''}
-                onchange="sendPropUpdate('${escapedId}', '${key}', this.value ? parseFloat(this.value) : null)">
-            </div>
-          `;
+          return createNumberField(id, field, value);
 
         case 'string':
           return `
@@ -589,6 +585,86 @@
                 onchange="sendPropUpdate('${escapedId}', '${key}', this.value)">
             </div>
           `;
+      }
+    }
+
+    function createNumberField(id, field, value) {
+      const escapedId = escapeJs(id);
+      const key = field.key;
+      const label = field.label || key;
+      const sizes = registeredStyles.sizes || {};
+
+      // Detect naming convention for size presets
+      let sizePrefix = null;
+      const keyLower = key.toLowerCase();
+      if (keyLower.endsWith('padding')) {
+        sizePrefix = 'padding-';
+      } else if (keyLower.endsWith('spacing')) {
+        sizePrefix = 'spacing-';
+      } else if (keyLower.endsWith('size') && !keyLower.endsWith('fontsize')) {
+        sizePrefix = 'size-';
+      }
+
+      // Filter sizes by prefix if applicable
+      const hasSizeConvention = sizePrefix !== null;
+
+      if (hasSizeConvention) {
+        const filteredSizes = sizePrefix
+          ? Object.keys(sizes).filter(name => name.startsWith(sizePrefix))
+          : Object.keys(sizes);
+
+        if (filteredSizes.length > 0) {
+          // Check if current value matches a registered size
+          let selectedSize = '';
+          for (const name of filteredSizes) {
+            if (sizes[name] === value) {
+              selectedSize = name;
+              break;
+            }
+          }
+
+          const options = filteredSizes.map(name =>
+            `<option value="${name}" ${selectedSize === name ? 'selected' : ''}>${name} (${sizes[name]}px)</option>`
+          ).join('');
+
+          return `
+            <div class="form-group">
+              <label>${label}</label>
+              <div class="number-with-preset">
+                <select onchange="onSizePresetSelect('${escapedId}', '${key}', this.value, this.nextElementSibling)">
+                  <option value="" ${!selectedSize ? 'selected' : ''}>Custom</option>
+                  ${options}
+                </select>
+                <input type="number" value="${value ?? ''}"
+                  ${field.min !== undefined ? `min="${field.min}"` : ''}
+                  ${field.max !== undefined ? `max="${field.max}"` : ''}
+                  ${field.step !== undefined ? `step="${field.step}"` : ''}
+                  onchange="sendPropUpdate('${escapedId}', '${key}', this.value ? parseFloat(this.value) : null)">
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      // Default: plain number input
+      return `
+        <div class="form-group">
+          <label>${label}</label>
+          <input type="number" value="${value ?? ''}"
+            ${field.min !== undefined ? `min="${field.min}"` : ''}
+            ${field.max !== undefined ? `max="${field.max}"` : ''}
+            ${field.step !== undefined ? `step="${field.step}"` : ''}
+            onchange="sendPropUpdate('${escapedId}', '${key}', this.value ? parseFloat(this.value) : null)">
+        </div>
+      `;
+    }
+
+    function onSizePresetSelect(id, key, sizeName, numberInput) {
+      const sizes = registeredStyles.sizes || {};
+      if (sizeName && sizes[sizeName] !== undefined) {
+        const value = sizes[sizeName];
+        numberInput.value = value;
+        sendPropUpdate(id, key, value);
       }
     }
 

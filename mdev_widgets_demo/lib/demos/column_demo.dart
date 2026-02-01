@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mdev_widgets/mdev_widgets.dart' as mdev;
+import 'package:mdev_widgets/mdev_shadow.dart' as mdev;
 
 import '../components/demo_section.dart';
 import '../components/demo_box.dart';

@@ -1,5 +1,5 @@
-import 'package:flutter/widgets.dart' as flutter;
-import 'package:mdev_widgets/mdev.dart';
+import 'package:flutter/material.dart' as flutter;
+import 'package:mdev_widgets/mdev_shadow.dart';
 
 class CenterDemo extends StatelessWidget {
   const CenterDemo({super.key});

@@ -1,9 +1,7 @@
-import 'package:flutter/widgets.dart' as flutter;
-import 'package:mdev_widgets/mdev.dart';
-
+import 'package:flutter/material.dart' as flutter;
+import 'package:mdev_widgets/mdev_shadow.dart';
 class PaddingDemo extends StatelessWidget {
   const PaddingDemo({super.key});
-
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -44,7 +42,6 @@ class PaddingDemo extends StatelessWidget {
       ),
     );
   }
-
   Widget _buildSection(String title, String subtitle, Widget demo) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,7 +60,6 @@ class PaddingDemo extends StatelessWidget {
       ],
     );
   }
-
   Widget _allPaddingDemo() {
     return Row(
       children: [
@@ -75,7 +71,6 @@ class PaddingDemo extends StatelessWidget {
       ],
     );
   }
-
   Widget _symmetricPaddingDemo() {
     return Row(
       children: [
@@ -96,7 +91,6 @@ class PaddingDemo extends StatelessWidget {
       ],
     );
   }
-
   Widget _onlyPaddingDemo() {
     return Row(
       children: [
@@ -110,7 +104,6 @@ class PaddingDemo extends StatelessWidget {
       ],
     );
   }
-
   Widget _fromLTRBDemo() {
     return Row(
       children: [
@@ -122,7 +115,6 @@ class PaddingDemo extends StatelessWidget {
       ],
     );
   }
-
   Widget _nestedPaddingDemo() {
     return Container(
       decoration: BoxDecoration(
@@ -154,7 +146,6 @@ class PaddingDemo extends StatelessWidget {
       ),
     );
   }
-
   Widget _paddingBox(String label, EdgeInsets padding) {
     return Container(
       decoration: BoxDecoration(

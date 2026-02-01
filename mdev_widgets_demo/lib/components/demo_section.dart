@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mdev_widgets/mdev_widgets.dart' as mdev;
+import 'package:mdev_widgets/mdev_shadow.dart' as mdev;
 
 class DemoSection extends StatelessWidget {
   final String title;

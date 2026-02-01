@@ -71,11 +71,14 @@ class ConfigSocket {
         _send({'type': 'reset_all'});
 
         if (_pendingStyles != null) {
+          debugPrint('Sending pending styles');
           _send({'type': 'styles', 'data': _pendingStyles});
           _pendingStyles = null;
         }
 
+        debugPrint('Sending ${_pendingMessages.length} pending messages');
         for (final msg in _pendingMessages) {
+          debugPrint('  -> ${msg['id']} (${msg['widgetType']})');
           _send(msg);
         }
         _pendingMessages.clear();
@@ -143,8 +146,10 @@ class ConfigSocket {
     };
 
     if (isConnected) {
+      debugPrint('Sending registration: $id ($type)');
       _send(msg);
     } else {
+      debugPrint('Queueing registration: $id ($type)');
       _pendingMessages.add(msg);
     }
   }

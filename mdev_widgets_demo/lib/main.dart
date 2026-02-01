@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:mdev_widgets/mdev_widgets.dart' as mdev;
+import 'package:mdev_widgets/mdev_shadow.dart';
 
 import 'init_mdev.dart';
 import 'demos/appbar_demo.dart';
@@ -85,8 +84,8 @@ class DemoPage extends StatelessWidget {
     return DefaultTabController(
       length: 6,
       child: Scaffold(
-        appBar: mdev.AppBar(
-          title: const Text('Mdev Widgets Demo'),
+        appBar: AppBar(
+          title: Text('Mdev Widgets Demo'),
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           actions: [
             IconButton(
@@ -132,9 +131,9 @@ class _EssentialsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      child: mdev.Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           ContainerDemo(),
           SizedBox(height: 24),
           SizedBoxDemo(),
@@ -155,9 +154,9 @@ class _LayoutTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      child: mdev.Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           ColumnDemo(),
           SizedBox(height: 24),
           RowDemo(),
@@ -178,9 +177,9 @@ class _TextAppBarTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      child: mdev.Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [TextDemo(), SizedBox(height: 24), AppBarDemo()],
+        children: [TextDemo(), SizedBox(height: 24), AppBarDemo()],
       ),
     );
   }

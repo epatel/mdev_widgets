@@ -1,9 +1,7 @@
-import 'package:flutter/widgets.dart' as flutter;
-import 'package:mdev_widgets/mdev.dart';
-
+import 'package:flutter/material.dart' as flutter;
+import 'package:mdev_widgets/mdev_shadow.dart';
 class SizedBoxDemo extends StatelessWidget {
   const SizedBoxDemo({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Column(
