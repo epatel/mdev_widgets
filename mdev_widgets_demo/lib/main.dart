@@ -13,6 +13,7 @@ import 'demos/sized_box_demo.dart';
 import 'demos/stack_demo.dart';
 import 'demos/text_demo.dart';
 import 'demos/wrap_demo.dart';
+import 'demos/custom_widget_demo.dart';
 import 'pages/instructions.dart';
 
 void main() async {
@@ -82,7 +83,7 @@ class DemoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: Scaffold(
         appBar: mdev.AppBar(
           title: const Text('Mdev Widgets Demo'),
@@ -104,6 +105,7 @@ class DemoPage extends StatelessWidget {
               Tab(text: 'Padding'),
               Tab(text: 'Layout'),
               Tab(text: 'Text & AppBar'),
+              Tab(text: 'Custom Widget'),
               Tab(text: 'Instructions'),
             ],
           ),
@@ -114,6 +116,7 @@ class DemoPage extends StatelessWidget {
             PaddingDemo(),
             _LayoutTab(),
             _TextAppBarTab(),
+            _CustomWidgetTab(),
             _InstructionsTab(),
           ],
         ),
@@ -179,6 +182,18 @@ class _TextAppBarTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [TextDemo(), SizedBox(height: 24), AppBarDemo()],
       ),
+    );
+  }
+}
+
+class _CustomWidgetTab extends StatelessWidget {
+  const _CustomWidgetTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SingleChildScrollView(
+      padding: EdgeInsets.all(16),
+      child: CustomWidgetDemo(),
     );
   }
 }
