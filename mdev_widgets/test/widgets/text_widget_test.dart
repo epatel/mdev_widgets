@@ -52,7 +52,8 @@ void main() {
       expect(provider.configs.length, equals(1));
       final config = provider.configs.values.first;
       expect(config.type, equals('Text'));
-      expect(config.get('defaultText'), equals('Register Me'));
+      // defaultText is stored in properties (registered defaults)
+      expect(config.getDefault('defaultText'), equals('Register Me'));
     });
 
     testWidgets('respects visible property', (tester) async {

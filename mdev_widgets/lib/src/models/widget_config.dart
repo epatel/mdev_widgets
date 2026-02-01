@@ -1,25 +1,34 @@
 class WidgetConfig {
   final String id;
   final String type;
-  final Map<String, dynamic> properties;
+  final Map<String, dynamic> properties;  // Registered defaults (for dashboard display)
+  final Map<String, dynamic> overrides;   // Explicitly changed values only
   final List<Map<String, dynamic>>? schema;
 
   WidgetConfig({
     required this.id,
     required this.type,
     Map<String, dynamic>? properties,
+    Map<String, dynamic>? overrides,
     this.schema,
-  }) : properties = properties ?? {};
+  }) : properties = properties ?? {},
+       overrides = overrides ?? {};
 
+  /// Get override value only - returns null if not explicitly changed.
+  /// Widgets should use: config?.get('key') ?? constructorValue
   dynamic get(String key, [dynamic defaultValue]) =>
-      properties[key] ?? defaultValue;
+      overrides[key] ?? defaultValue;
 
-  void set(String key, dynamic value) => properties[key] = value;
+  /// Get the registered default value (for dashboard display)
+  dynamic getDefault(String key) => properties[key];
+
+  void set(String key, dynamic value) => overrides[key] = value;
 
   Map<String, dynamic> toJson() => {
     'id': id,
     'type': type,
     'properties': properties,
+    if (overrides.isNotEmpty) 'overrides': overrides,
     if (schema != null) 'schema': schema,
   };
 
@@ -27,15 +36,21 @@ class WidgetConfig {
     id: json['id'] as String,
     type: json['type'] as String,
     properties: Map<String, dynamic>.from(json['properties'] as Map? ?? {}),
+    overrides: Map<String, dynamic>.from(json['overrides'] as Map? ?? {}),
     schema: json['schema'] != null
         ? (json['schema'] as List).map((e) => Map<String, dynamic>.from(e as Map)).toList()
         : null,
   );
 
-  WidgetConfig copyWith({Map<String, dynamic>? properties, List<Map<String, dynamic>>? schema}) => WidgetConfig(
+  WidgetConfig copyWith({
+    Map<String, dynamic>? properties,
+    Map<String, dynamic>? overrides,
+    List<Map<String, dynamic>>? schema,
+  }) => WidgetConfig(
     id: id,
     type: type,
     properties: properties ?? Map.from(this.properties),
+    overrides: overrides ?? Map.from(this.overrides),
     schema: schema ?? this.schema,
   );
 }

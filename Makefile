@@ -22,26 +22,27 @@ menu:
 	echo "1 make server             - Run the Python config server"
 	echo "2 make app                - Run the counter app in Chrome"
 	echo "3 make demo               - Run the widgets demo app in Chrome"
-	echo "4 make all                - Run server (background) and app"
-	echo "5 make analyze            - Analyze all packages"
-	echo "6 make test               - Run tests"
-	echo "7 make build              - Build the counter app for web"
-	echo "8 make clean              - Clean build artifacts"
-	echo "9 make pub-get            - Get dependencies for all projects"
-	echo "10 make stop-server       - Stop any running server"
-	echo "11 make dashboard         - Open the config dashboard in browser"
-	echo "12 make venv              - Setup Python virtual environment"
-	echo "13 make test-server       - Run Python server tests only"
+	echo "4 make all                - Run server (background) and counter app"
+	echo "5 make demo-all           - Run server (background) and demo app"
+	echo "6 make analyze            - Analyze all packages"
+	echo "7 make test               - Run tests"
+	echo "8 make build              - Build the counter app for web"
+	echo "9 make clean              - Clean build artifacts"
+	echo "10 make pub-get           - Get dependencies for all projects"
+	echo "11 make stop-server       - Stop any running server"
+	echo "12 make dashboard         - Open the config dashboard in browser"
+	echo "13 make venv              - Setup Python virtual environment"
+	echo "14 make test-server       - Run Python server tests only"
 
 select:
 	read -p ">>> " P ; make menu | grep "^$$P " | cut -d ' ' -f2-3 ; make menu | grep "^$$P " | cut -d ' ' -f2-3 | bash
 
-1 2 3 4 5 6 7 8 9 10 11 12 13:
+1 2 3 4 5 6 7 8 9 10 11 12 13 14:
 	make menu | grep "^$@ " | cut -d ' ' -f2-3 | bash
 
 .SILENT:
 
-.PHONY: info menu select server app demo all analyze test test-server build clean pub-get stop-server dashboard server-bg venv venv-check
+.PHONY: info menu select server app demo all demo-all analyze test test-server build clean pub-get stop-server dashboard server-bg venv venv-check
 
 # Setup Python virtual environment
 venv:
@@ -73,9 +74,16 @@ app:
 demo:
 	cd mdev_widgets_demo && flutter run -d chrome
 
-# Run both server and app (cleanup server when app exits)
+# Run both server and counter app (cleanup server when app exits)
 all: server-bg
 	cd mdev_widgets_counter && flutter run -d chrome; \
+	echo "Stopping server..."; \
+	pkill -f "config_server.py" 2>/dev/null || true; \
+	echo "Done."
+
+# Run both server and demo app (cleanup server when app exits)
+demo-all: server-bg
+	cd mdev_widgets_demo && flutter run -d chrome; \
 	echo "Stopping server..."; \
 	pkill -f "config_server.py" 2>/dev/null || true; \
 	echo "Done."

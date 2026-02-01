@@ -19,15 +19,18 @@ void main() {
         expect(provider.configs['widget-1']!.type, equals('Text'));
       });
 
-      test('register with properties stores them', () {
+      test('register with properties stores them as defaults', () {
         provider.register('widget-1', 'Column', properties: {
           'padding': 16.0,
           'visible': true,
         });
 
         final config = provider.getConfig('widget-1');
-        expect(config!.get('padding'), equals(16.0));
-        expect(config.get('visible'), isTrue);
+        // Registered values are defaults, not overrides
+        expect(config!.getDefault('padding'), equals(16.0));
+        expect(config.getDefault('visible'), isTrue);
+        // get() returns null since no overrides
+        expect(config.get('padding'), isNull);
       });
 
       test('register does not overwrite existing widget', () {
@@ -35,8 +38,8 @@ void main() {
         provider.register('widget-1', 'Text', properties: {'fontSize': 20.0});
 
         final config = provider.getConfig('widget-1');
-        // Should keep original value
-        expect(config!.get('fontSize'), equals(14.0));
+        // Should keep original default value
+        expect(config!.getDefault('fontSize'), equals(14.0));
       });
 
       test('unregister removes widget', () {
@@ -97,16 +100,17 @@ void main() {
     });
 
     group('update operations', () {
-      test('updateDefaultText updates the property', () {
+      test('updateDefaultText updates the default property', () {
         provider.register('text-1', 'Text', properties: {'defaultText': 'Old'});
 
         provider.updateDefaultText('text-1', 'New');
 
         final config = provider.getConfig('text-1');
-        expect(config!.get('defaultText'), equals('New'));
+        // defaultText is stored in properties (for dashboard display)
+        expect(config!.properties['defaultText'], equals('New'));
       });
 
-      test('updateFromServer updates properties', () {
+      test('updateFromServer creates overrides for changed values', () {
         provider.register('widget-1', 'Text', properties: {'fontSize': 14.0});
 
         provider.updateFromServer('widget-1', {
@@ -114,8 +118,25 @@ void main() {
         });
 
         final config = provider.getConfig('widget-1');
+        // Changed value becomes an override
         expect(config!.get('fontSize'), equals(20.0));
+        // New value (not in original defaults) becomes an override
         expect(config.get('color'), equals('#ff0000'));
+        // Original default preserved
+        expect(config.getDefault('fontSize'), equals(14.0));
+      });
+
+      test('updateFromServer does not override unchanged values', () {
+        provider.register('widget-1', 'Text', properties: {'fontSize': 14.0, 'visible': true});
+
+        provider.updateFromServer('widget-1', {
+          'properties': {'fontSize': 14.0, 'visible': true},  // Same as defaults
+        });
+
+        final config = provider.getConfig('widget-1');
+        // No overrides since values match defaults
+        expect(config!.get('fontSize'), isNull);
+        expect(config.get('visible'), isNull);
       });
 
       test('updateFromServer ignores non-existent widget', () {

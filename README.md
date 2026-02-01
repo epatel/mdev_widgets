@@ -20,11 +20,12 @@ make venv        # Create Python virtual environment
 make server      # Start config server (in one terminal)
 make app         # Run Flutter app in Chrome (in another terminal)
 
-# Or run both together
-make all
+# Or run both together (server auto-stops when app exits)
+make all         # Counter app + server
+make demo-all    # Demo app + server
 
 # Open dashboard
-make dashboard   # Opens http://localhost:8081
+make dashboard   # Opens http://localhost:8080
 
 # Run tests
 make test

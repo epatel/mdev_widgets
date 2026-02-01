@@ -9,9 +9,10 @@ void main() {
       expect(config.id, equals('test-id'));
       expect(config.type, equals('Text'));
       expect(config.properties, isEmpty);
+      expect(config.overrides, isEmpty);
     });
 
-    test('creates with properties', () {
+    test('creates with properties (defaults)', () {
       final config = WidgetConfig(
         id: 'test-id',
         type: 'Text',
@@ -20,31 +21,39 @@ void main() {
 
       expect(config.properties['fontSize'], equals(16.0));
       expect(config.properties['color'], equals('#ff0000'));
+      expect(config.getDefault('fontSize'), equals(16.0));
     });
 
-    test('get returns property value', () {
+    test('get returns override value only', () {
       final config = WidgetConfig(
         id: 'test-id',
         type: 'Text',
-        properties: {'fontSize': 16.0},
+        properties: {'fontSize': 16.0},  // default
+        overrides: {'fontSize': 20.0},   // override
       );
 
-      expect(config.get('fontSize'), equals(16.0));
+      expect(config.get('fontSize'), equals(20.0));  // returns override
+      expect(config.getDefault('fontSize'), equals(16.0));  // returns default
     });
 
-    test('get returns default when property missing', () {
-      final config = WidgetConfig(id: 'test-id', type: 'Text');
+    test('get returns null when no override exists', () {
+      final config = WidgetConfig(
+        id: 'test-id',
+        type: 'Text',
+        properties: {'fontSize': 16.0},  // default only, no override
+      );
 
-      expect(config.get('fontSize', 14.0), equals(14.0));
-      expect(config.get('missing'), isNull);
+      expect(config.get('fontSize'), isNull);  // no override
+      expect(config.get('fontSize', 14.0), equals(14.0));  // uses defaultValue param
     });
 
-    test('set updates property value', () {
+    test('set updates override value', () {
       final config = WidgetConfig(id: 'test-id', type: 'Text');
 
       config.set('fontSize', 20.0);
 
       expect(config.get('fontSize'), equals(20.0));
+      expect(config.overrides['fontSize'], equals(20.0));
     });
 
     group('JSON serialization', () {
@@ -53,6 +62,7 @@ void main() {
           id: 'widget-123',
           type: 'Column',
           properties: {'visible': true, 'padding': 16.0},
+          overrides: {'padding': 24.0},
         );
 
         final json = config.toJson();
@@ -61,21 +71,36 @@ void main() {
         expect(json['type'], equals('Column'));
         expect(json['properties']['visible'], isTrue);
         expect(json['properties']['padding'], equals(16.0));
+        expect(json['overrides']['padding'], equals(24.0));
       });
 
-      test('fromJson recreates config', () {
+      test('toJson excludes overrides when empty', () {
+        final config = WidgetConfig(
+          id: 'widget-123',
+          type: 'Column',
+          properties: {'visible': true},
+        );
+
+        final json = config.toJson();
+
+        expect(json.containsKey('overrides'), isFalse);
+      });
+
+      test('fromJson recreates config with overrides', () {
         final json = {
           'id': 'widget-456',
           'type': 'Text',
           'properties': {'fontSize': 18.0, 'fontWeight': 'bold'},
+          'overrides': {'fontSize': 24.0},
         };
 
         final config = WidgetConfig.fromJson(json);
 
         expect(config.id, equals('widget-456'));
         expect(config.type, equals('Text'));
-        expect(config.get('fontSize'), equals(18.0));
-        expect(config.get('fontWeight'), equals('bold'));
+        expect(config.get('fontSize'), equals(24.0));  // override
+        expect(config.getDefault('fontSize'), equals(18.0));  // default
+        expect(config.get('fontWeight'), isNull);  // no override
       });
 
       test('fromJson handles missing properties', () {
@@ -84,6 +109,7 @@ void main() {
         final config = WidgetConfig.fromJson(json);
 
         expect(config.properties, isEmpty);
+        expect(config.overrides, isEmpty);
       });
 
       test('fromJson handles null properties', () {
@@ -102,7 +128,9 @@ void main() {
             'visible': true,
             'highlight': false,
             'padding': 24.0,
-            'nested': {'key': 'value'},
+          },
+          overrides: {
+            'padding': 32.0,
           },
         );
 
@@ -111,25 +139,27 @@ void main() {
 
         expect(restored.id, equals(original.id));
         expect(restored.type, equals(original.type));
-        expect(restored.get('visible'), equals(original.get('visible')));
-        expect(restored.get('padding'), equals(original.get('padding')));
-        expect(restored.get('nested'), equals({'key': 'value'}));
+        expect(restored.getDefault('visible'), equals(true));
+        expect(restored.getDefault('padding'), equals(24.0));
+        expect(restored.get('padding'), equals(32.0));
       });
     });
 
     group('copyWith', () {
-      test('creates copy with same properties', () {
+      test('creates copy with same values', () {
         final original = WidgetConfig(
           id: 'test',
           type: 'Text',
           properties: {'fontSize': 16.0},
+          overrides: {'fontSize': 20.0},
         );
 
         final copy = original.copyWith();
 
         expect(copy.id, equals(original.id));
         expect(copy.type, equals(original.type));
-        expect(copy.get('fontSize'), equals(16.0));
+        expect(copy.getDefault('fontSize'), equals(16.0));
+        expect(copy.get('fontSize'), equals(20.0));
       });
 
       test('creates copy with new properties', () {
@@ -139,20 +169,23 @@ void main() {
           properties: {'fontSize': 16.0},
         );
 
-        final copy = original.copyWith(properties: {'fontSize': 24.0, 'color': '#000'});
+        final copy = original.copyWith(
+          properties: {'fontSize': 24.0, 'color': '#000'},
+          overrides: {'fontSize': 28.0},
+        );
 
         expect(copy.id, equals(original.id));
-        expect(copy.get('fontSize'), equals(24.0));
-        expect(copy.get('color'), equals('#000'));
+        expect(copy.getDefault('fontSize'), equals(24.0));
+        expect(copy.get('fontSize'), equals(28.0));
         // Original unchanged
-        expect(original.get('fontSize'), equals(16.0));
+        expect(original.getDefault('fontSize'), equals(16.0));
       });
 
       test('copy is independent from original', () {
         final original = WidgetConfig(
           id: 'test',
           type: 'Text',
-          properties: {'fontSize': 16.0},
+          overrides: {'fontSize': 16.0},
         );
 
         final copy = original.copyWith();

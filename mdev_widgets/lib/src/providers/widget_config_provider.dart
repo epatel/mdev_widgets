@@ -129,11 +129,23 @@ class WidgetConfigProvider extends ChangeNotifier {
     if (!_isActive || !isCurrentSession) return;
     final existing = _configs[id];
     if (existing != null) {
-      final properties = Map<String, dynamic>.from(json['properties'] as Map? ?? {});
+      final serverProps = Map<String, dynamic>.from(json['properties'] as Map? ?? {});
+
+      // Compute overrides: values that differ from registered defaults
+      final overrides = <String, dynamic>{};
+      for (final entry in serverProps.entries) {
+        final defaultValue = existing.properties[entry.key];
+        if (entry.value != defaultValue) {
+          overrides[entry.key] = entry.value;
+        }
+      }
+
       _configs[id] = WidgetConfig(
         id: id,
         type: existing.type,
-        properties: properties,
+        properties: existing.properties,  // Keep original defaults
+        overrides: overrides,              // Only store changed values
+        schema: existing.schema,
       );
       _saveConfigs();
       notifyListeners();
