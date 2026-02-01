@@ -6,39 +6,18 @@ import 'package:mdev_widgets/src/widgets/stack_id_mixin.dart';
 /// On VM (dart:io platforms), the stack trace format differs significantly.
 /// These tests verify basic functionality that works across platforms.
 void main() {
-  setUp(() {
-    // Reset instance counts before each test to ensure isolation
-    resetInstanceCounts();
-  });
-
   group('extractCallerId', () {
     test('returns a non-empty string', () {
       final id = extractCallerId();
       expect(id, isNotEmpty);
     });
 
-    test('first call from location returns base ID', () {
+    test('returns same ID for same call location', () {
       String getId() => extractCallerId();
-      final id1 = getId();
-      // First call should return base ID without suffix
-      expect(id1.contains('#'), isFalse);
-    });
-
-    test('subsequent calls from same location get indexed', () {
-      String getId() => extractCallerId();
-
       final id1 = getId();
       final id2 = getId();
-      final id3 = getId();
-
-      // First is base, subsequent get #2, #3, etc.
-      expect(id1.contains('#'), isFalse);
-      expect(id2, endsWith('#2'));
-      expect(id3, endsWith('#3'));
-
-      // All should share the same base
-      expect(id2.replaceAll(' #2', ''), equals(id1));
-      expect(id3.replaceAll(' #3', ''), equals(id1));
+      // Same call site should return same ID
+      expect(id1, equals(id2));
     });
 
     test('returns different values for different call sites', () {
@@ -61,11 +40,10 @@ void main() {
   });
 
   group('ID stability', () {
-    test('single call returns stable base ID', () {
+    test('single call returns stable ID', () {
       // Simulating a widget capturing its ID once at construction
       final id = _getIdFromFixedLocation();
       expect(id, isNotEmpty);
-      expect(id.contains('#'), isFalse); // First call, no suffix
     });
 
     test('IDs have reasonable length', () {
@@ -73,19 +51,6 @@ void main() {
 
       // Should contain some identifying information
       expect(id.length, greaterThan(3));
-    });
-
-    test('resetInstanceCounts clears counters', () {
-      String getId() => extractCallerId();
-
-      getId(); // First call
-      final id2 = getId(); // Should be #2
-      expect(id2, endsWith('#2'));
-
-      resetInstanceCounts();
-
-      final id3 = getId(); // Should be base again after reset
-      expect(id3.contains('#'), isFalse);
     });
   });
 

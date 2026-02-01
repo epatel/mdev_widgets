@@ -144,19 +144,7 @@ mdev.Column(children: [
 
 ### Stack-Based Widget Identification
 
-`extractCallerId()` in `stack_id_mixin.dart` generates IDs like `[innerFunc] outerFunc > parent (file.dart:line:col)` by parsing the call stack. Platform-specific parsing for VM vs Web.
-
-**Instance counting:** When the same code line creates multiple widgets (loops, helper methods, `.map()`), they get indexed:
-```dart
-// All Paddings created at the same line in wrapItem()
-Widget wrapItem(Widget child) => mdev.Padding(...);  // line 5
-
-Column(children: [
-  wrapItem(Text('A')),  // ID: wrapItem (file.dart:5:32)
-  wrapItem(Text('B')),  // ID: wrapItem (file.dart:5:32) #2
-])
-```
-Use `resetInstanceCounts()` for testing.
+`extractCallerId()` in `stack_id_mixin.dart` generates IDs like `[innerFunc] outerFunc > parent (file.dart:line:col)` by parsing the call stack. Each unique code location gets a unique ID. Platform-specific parsing for VM vs Web.
 
 ### Hot Restart Handling (Flutter Web)
 

@@ -84,22 +84,20 @@ Column(
 
 ## Widget ID Generation
 
-Widgets auto-generate unique IDs from their call site (file:line:col). When the same code line creates multiple widgets (loops, helper methods, `.map()`), they get indexed:
+Widgets auto-generate unique IDs from their call site (file:line:col):
 
 ```dart
-// Helper method - all Paddings created at line 5
-Widget wrapItem(Widget child) => Padding(padding: EdgeInsets.all(8), child: child);  // line 5
-
 Column(children: [
-  wrapItem(Text('A')),  // ID: wrapItem (my_widget.dart:5:32)
-  wrapItem(Text('B')),  // ID: wrapItem (my_widget.dart:5:32) #2
-  wrapItem(Text('C')),  // ID: wrapItem (my_widget.dart:5:32) #3
+  Text('Hello'),   // ID: build (my_widget.dart:15:5)
+  Text('World'),   // ID: build (my_widget.dart:16:5)
 ])
 
-// Or in a loop
-for (var item in items) {
-  children.add(Padding(...));  // Same line, each gets unique index
-}
+// Helper method shows call hierarchy
+Widget wrapItem(Widget child) => Padding(padding: EdgeInsets.all(8), child: child);
+
+Column(children: [
+  wrapItem(Text('A')),  // ID: [wrapItem] build (my_widget.dart:5:32)
+])
 ```
 
 ## Schema-Driven Configuration
